@@ -16,11 +16,12 @@ fun main(args : Array<String>) {
 }
 
 private fun generateReports(transactions: List<Transaction>) {
-  val transactionsByName = transactions.groupBy { it.name }
+  val transactionsByName = transactions.groupBy { it.envelope }
   for ((key, value) in transactionsByName) {
+    println()
     value
             .sortedBy { it.date }
-            .forEach { println(it) }
+            .forEach { println("${it.date}\t$${it.amount}") }
   }
 }
 
@@ -29,10 +30,19 @@ private fun getTransactions(spreadsheetId: String, values: Sheets.Spreadsheets.V
   val envelopes = getEnvelopeAssignments(spreadsheetId, values)
 
   val envelopesByNumber = envelopes.associateBy { it.number }
+  val envelopesByName = envelopes.associateBy { it.name.split(" ").last() }
 
-  val resolvedTransactions = transactions.map { if (it.name == null) Transaction(date = it.date, envelope = it.envelope, name = envelopesByNumber[it.envelope]?.name, amount = it.amount) else it }
+  val resolvedTransactions = transactions.map { if (it.name == null)
+    Transaction(date = it.date, envelope = it.envelope, name = envelopesByNumber[it.envelope]?.name, amount = it.amount)
+  else {
+    val envelope = getEnvelopeNumber(envelopesByName, it.name)
+    Transaction(date = it.date, envelope = envelope, name = envelopesByNumber[envelope]?.name, amount = it.amount)
+  }
+  }
   return resolvedTransactions
 }
+
+private fun getEnvelopeNumber(envelopesByName: Map<String, Envelope>, name: String): Int? = (envelopesByName[name] ?: envelopesByName[name.split(" ").last()])?.number
 
 @Suppress("UNCHECKED_CAST")
 private fun getEnvelopeAssignments(spreadsheetId: String, values: Sheets.Spreadsheets.Values): List<Envelope> {
@@ -47,8 +57,7 @@ private fun getEnvelopeAssignments(spreadsheetId: String, values: Sheets.Spreads
 @Suppress("UNCHECKED_CAST")
 private fun getEnvelopeTransactions(spreadsheetId: String, values: Sheets.Spreadsheets.Values): List<Transaction> {
   val transactionSheet = values.get(spreadsheetId, "Envelopes!A2:C").execute()
-  val pattern = DateTimeFormatter.ofPattern("M/d/yyyy")
-  val charMatcher = CharMatcher.`is`('$').or(CharMatcher.anyOf("$,"))
+  val (pattern, charMatcher) = getPatterns()
   val transactions = (transactionSheet.values.toTypedArray()[2] as ArrayList<ArrayList<String>>)
           .filter { it.size == 3 }
           .map {
@@ -61,8 +70,7 @@ private fun getEnvelopeTransactions(spreadsheetId: String, values: Sheets.Spread
 @Suppress("UNCHECKED_CAST")
 private fun getNamedTransactions(spreadsheetId: String, values: Sheets.Spreadsheets.Values): List<Transaction> {
   val transactionSheet = values.get(spreadsheetId, "Notebook!A2:C").execute()
-  val pattern = DateTimeFormatter.ofPattern("M/d/yyyy")
-  val charMatcher = CharMatcher.`is`('$').or(CharMatcher.anyOf("$,"))
+  val (pattern, charMatcher) = getPatterns()
   val transactions = (transactionSheet.values.toTypedArray()[2] as ArrayList<ArrayList<String>>)
           .filter { it.size == 3 }
           .map {
@@ -70,5 +78,11 @@ private fun getNamedTransactions(spreadsheetId: String, values: Sheets.Spreadshe
           }
 
   return transactions
+}
+
+private fun getPatterns(): Pair<DateTimeFormatter, CharMatcher> {
+  val pattern = DateTimeFormatter.ofPattern("M/d/yyyy")
+  val charMatcher = CharMatcher.anyOf("$,")
+  return Pair(pattern, charMatcher)
 }
 
