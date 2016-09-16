@@ -20,50 +20,63 @@ import java.time.Month
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-@Suppress("UNCHECKED_CAST")
-        /**
- * Created by raymondrishty on 9/14/16.
- */
 fun main(args : Array<String>) {
 
   val service = getSheetsService()
 
-  // Prints the names and majors of students in a sample spreadsheet:
-  // https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
   val spreadsheetId = "1dOkYihYd1UuXP2f08tr1VA9TjGFDg1DwII1x1t8Ji1s"
   val values = service.spreadsheets().Values()
 
 
-  val transactions = getTransactions(spreadsheetId, values)
+  val transactions = getEnvelopeTransactions(spreadsheetId, values) + getNamedTransactions(spreadsheetId, values)
   val envelopes = getEnvelopeAssignments(spreadsheetId, values)
 
   val envelopesByNumber = envelopes.associateBy { it.number }
 
-  val map = transactions.map { if (it.name == null) Transaction(date = it.date, envelope = it.envelope, name = envelopesByNumber[it.envelope]?.name, amount = it.amount) else it }
-
+  val resolvedTransactions = transactions.map { if (it.name == null) Transaction(date = it.date, envelope = it.envelope, name = envelopesByNumber[it.envelope]?.name, amount = it.amount) else it }
+  val transactionsByName = resolvedTransactions.groupBy { it.name }
+  for (entry in transactionsByName.entries) {
+    entry.value
+            .sortedBy { it.date }
+            .forEach { println(it) }
+  }
 }
 
+@Suppress("UNCHECKED_CAST")
 private fun getEnvelopeAssignments(spreadsheetId: String, values: Sheets.Spreadsheets.Values): List<Envelope> {
-  val assignmentsSheet = values.get(spreadsheetId, "Assignments!A:B").execute()
+  val assignmentsSheet = values.get(spreadsheetId, "Assignments!A2:B").execute()
   val envelopes = (assignmentsSheet.values.toTypedArray()[2] as ArrayList<ArrayList<String>>)
-          .drop(1)
           .map {
             Envelope(number = Integer.parseInt(it[0]), name = it[1])
           }
   return envelopes
 }
 
-private fun getTransactions(spreadsheetId: String, values: Sheets.Spreadsheets.Values): List<Transaction> {
-  val transactionSheet = values.get(spreadsheetId, "Envelopes!A:C").execute()
+@Suppress("UNCHECKED_CAST")
+private fun getEnvelopeTransactions(spreadsheetId: String, values: Sheets.Spreadsheets.Values): List<Transaction> {
+  val transactionSheet = values.get(spreadsheetId, "Envelopes!A2:C").execute()
   val pattern = DateTimeFormatter.ofPattern("M/d/yyyy")
-  val charMatcher = CharMatcher.`is`('$')
-  val separatorCharMatcher = CharMatcher.`is`(',')
+  val charMatcher = CharMatcher.`is`('$').or(CharMatcher.anyOf("$,"))
   val transactions = (transactionSheet.values.toTypedArray()[2] as ArrayList<ArrayList<String>>)
-          .drop(1)
+          .filter { it.size == 3 }
           .map {
-            println(it)
-            Transaction(date = LocalDate.parse(it[0], pattern), envelope = Integer.parseInt(it[1]), amount = BigDecimal(separatorCharMatcher.removeFrom(charMatcher.trimLeadingFrom(it[2]))).toDouble())
+            Transaction(date = LocalDate.parse(it[0], pattern), envelope = Integer.parseInt(it[1]), amount = BigDecimal(charMatcher.removeFrom(it[2])).toDouble())
           }
+
+  return transactions
+}
+
+@Suppress("UNCHECKED_CAST")
+private fun getNamedTransactions(spreadsheetId: String, values: Sheets.Spreadsheets.Values): List<Transaction> {
+  val transactionSheet = values.get(spreadsheetId, "Notebook!A2:C").execute()
+  val pattern = DateTimeFormatter.ofPattern("M/d/yyyy")
+  val charMatcher = CharMatcher.`is`('$').or(CharMatcher.anyOf("$,"))
+  val transactions = (transactionSheet.values.toTypedArray()[2] as ArrayList<ArrayList<String>>)
+          .filter { it.size == 3 }
+          .map {
+            Transaction(date = LocalDate.parse(it[0], pattern), name = it[1], amount = BigDecimal(charMatcher.removeFrom(it[2])).toDouble())
+          }
+
   return transactions
 }
 
