@@ -1,0 +1,27 @@
+$name\\
+$address
+
+Thank you for your contributions to Reformed Presbyterian Church of West
+Chester in 2016.
+
+Please find below a summary of your donations over the last year.
+
+\bigskip
+
+\begin{minipage}{6in}
+\begin{multicols}{2}
+\tablehead{\textbf{Date} & \textbf{Amount} \\ \midrule}
+\begin{supertabular}{lr}
+#foreach($transaction in $transactions)
+$transaction.date & \SI[round-precision=2,round-mode=places,round-integer-to-decimal]{$transaction.amount}[\$]{}\\
+#end
+\bottomrule
+ & \SI[round-precision=2,round-mode=places,round-integer-to-decimal]{$total}[\$]{}\\
+\end{supertabular}
+\end{multicols}
+
+\end{minipage}
+
+\,
+
+\newpage
