@@ -1,14 +1,19 @@
+
 import com.github.rvesse.airline.annotations.Command
 import com.google.api.services.sheets.v4.Sheets
+import javax.inject.Inject
 
 @Command(name = "getNamesWithoutAddresses")
 class GetNamesWithoutAddresses : Runnable {
+  @Inject
+  var options = Options()
+
   override fun run() {
-    val service = SheetsService()
-    val spreadsheetId = "1dOkYihYd1UuXP2f08tr1VA9TjGFDg1DwII1x1t8Ji1s"
-    val values = service.spreadsheets().Values()
-    println(getNamesWithoutAddresses(spreadsheetId, values))
+    val values = getSpreadsheetValues()
+    println(getNamesWithoutAddresses(options.spreadsheetId, values))
   }
+
+  private fun getSpreadsheetValues(): Sheets.Spreadsheets.Values = SheetsService().spreadsheets().Values()
 
   private fun getNamesWithoutAddresses(spreadsheetId: String, values: Sheets.Spreadsheets.Values): List<String> {
     val namedAddresses = getNamedAddresses(spreadsheetId, values)

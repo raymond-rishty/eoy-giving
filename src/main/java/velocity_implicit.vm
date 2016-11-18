@@ -1,2 +1,8 @@
 #* @implicitly included *#
 #* @vtlvariable name="transactions" type="Transaction[]" *#
+#* @vtlvariable name="name" type="java.lang.String" *#
+#* @vtlvariable name="address" type="java.lang.String" *#
+#* @vtlvariable name="total" type="double" *#
+#* @vtlvariable name="contents" type="java.lang.String" *#
+#* @vtlvariable name="dateFormat" type="java.time.format.DateTimeFormatter" *#
+

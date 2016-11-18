@@ -4,14 +4,14 @@
 \usepackage{ifxetex,ifluatex}
 \usepackage{fixltx2e} % provides \textsubscript
 \ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
-\usepackage[T1]{fontenc}
-\usepackage[utf8]{inputenc}
-\else % if luatex or xelatex
-\ifxetex
-\usepackage{mathspec}
-\usepackage{xltxtra,xunicode}
-\else
-\usepackage{fontspec}
+    \usepackage[T1]{fontenc}
+    \usepackage[utf8]{inputenc}
+  \else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+    \usepackage{xltxtra,xunicode}
+  \else
+    \usepackage{fontspec}
 \fi
 \defaultfontfeatures{Mapping=tex-text,Scale=MatchLowercase}
 \newcommand{\euro}{€}
@@ -24,22 +24,22 @@
 \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
 }{}
 \ifxetex
-\usepackage[setpagesize=false, % page size defined by xetex
-unicode=false, % unicode breaks when used with xetex
-xetex]{hyperref}
-\else
-\usepackage[unicode=true]{hyperref}
+    \usepackage[setpagesize=false, % page size defined by xetex
+    unicode=false, % unicode breaks when used with xetex
+    xetex]{hyperref}
+  \else
+    \usepackage[unicode=true]{hyperref}
 \fi
 \usepackage[usenames,dvipsnames]{color}
 \hypersetup{breaklinks=true,
-bookmarks=true,
-pdfauthor={},
-pdftitle={},
-colorlinks=true,
-citecolor=blue,
-urlcolor=blue,
-linkcolor=magenta,
-pdfborder={0 0 0}}
+  bookmarks=true,
+  pdfauthor={},
+  pdftitle={},
+  colorlinks=true,
+  citecolor=blue,
+  urlcolor=blue,
+  linkcolor=magenta,
+  pdfborder={0 0 0}}
 \urlstyle{same}  % don't use monospace font for urls
 \usepackage{supertabular,booktabs}
 \usepackage{multicol}
@@ -68,12 +68,12 @@ pdfborder={0 0 0}}
 
 % Redefines (sub)paragraphs to behave more like sections
 \ifx\paragraph\undefined\else
-\let\oldparagraph\paragraph
-\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+  \let\oldparagraph\paragraph
+  \renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
 \fi
 \ifx\subparagraph\undefined\else
-\let\oldsubparagraph\subparagraph
-\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+  \let\oldsubparagraph\subparagraph
+  \renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
 \fi
 \textheight 5in
 

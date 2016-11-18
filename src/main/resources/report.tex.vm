@@ -13,7 +13,7 @@ Please find below a summary of your donations over the last year.
 \tablehead{\textbf{Date} & \textbf{Amount} \\ \midrule}
 \begin{supertabular}{lr}
 #foreach($transaction in $transactions)
-$transaction.date & \SI[round-precision=2,round-mode=places,round-integer-to-decimal]{$transaction.amount}[\$]{}\\
+$transaction.date.format($dateFormat) & \SI[round-precision=2,round-mode=places,round-integer-to-decimal]{$transaction.amount}[\$]{}\\
 #end
 \bottomrule
  & \SI[round-precision=2,round-mode=places,round-integer-to-decimal]{$total}[\$]{}\\

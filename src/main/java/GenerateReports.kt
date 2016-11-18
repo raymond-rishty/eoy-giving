@@ -9,9 +9,14 @@ import org.apache.velocity.util.ClassUtils
 import java.io.File
 import java.io.InputStream
 import java.io.StringWriter
+import java.time.format.DateTimeFormatter
+import javax.inject.Inject
 
 @Command(name = "generateReports")
 class GenerateReports : Runnable {
+  @Inject
+  var options = Options()
+
   private val velocityEngine: VelocityEngine by lazy {
     VelocityEngine().apply {
       setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath")
@@ -28,53 +33,40 @@ class GenerateReports : Runnable {
   }
 
   override fun run() {
-    val (spreadsheetId, values) = getSheetInfo()
-    val transactions = getTransactions(spreadsheetId, values)
-    val namedAddresses = getNamedAddresses(spreadsheetId, values)
+    val values = getSheetInfo()
+    val transactions = getTransactions(options.spreadsheetId, values)
+    val namedAddresses = getNamedAddresses(options.spreadsheetId, values)
     generateReports(transactions, namedAddresses)
   }
 
   fun generateReports(transactions: List<Transaction>, namedAddresses: List<NamedAddress>) {
-    val transactionsByName = transactions.groupBy { it.envelope }
+    val transactionsByName = transactions.groupBy { it.name }
 
     val map = transactionsByName
-      .map { getReport(it.key, it.value, namedAddresses) }
-      //.sortedByDescending { it.transactions.size }
-      //.take(1)
-      //.map { printReport(it.namedAddress, it.transactions) }
+      .values
+      .map { getReport(it, namedAddresses) }
+      .filter { it.isEligible() }
       .map { it.toMarkdown() }
       .joinToString(separator = "\n")
     val reportsTex = StringWriter().apply {
-      velocityEngine.getTemplate("reports.tex.vm").merge(VelocityContext().apply { put("contents", map) }, this)
+      velocityEngine.getTemplate("reports.tex.vm")
+        .merge(
+          VelocityContext().apply {
+            put("contents", map)
+          },
+          this)
     }.toString()
     Files.write(reportsTex, File("reports.tex"), Charsets.UTF_8)
     println(reportsTex)
-/*
-    for ((key, value) in transactionsByName) {
-      val (namedAddress, transactionSums) = getReport(key, value, namedAddresses)
-
-      printReport(namedAddress, transactionSums)
-      *//*
-
-      value
-        .sortedBy { it.date }
-        .forEach { println("${it.date}\t$${it.amount}") }*//*
-    }*/
   }
 
-  private fun printReport(namedAddress: NamedAddress, transactionSums: List<Transaction>): String {
-    val stringBuilder = StringBuilder()
-
-    stringBuilder.appendln(namedAddress.name)
-    stringBuilder.appendln(namedAddress.address)
-    transactionSums
-      .forEach { stringBuilder.appendln("${it.date}\t${it.amount.toCurrencyString()}") }
-
-    stringBuilder.appendln(transactionSums.sumByDouble { it.amount }.toCurrencyString())
-    return stringBuilder.toString()
+  private fun Report.isEligible(): Boolean = when {
+    transactions.size >= 4 -> true
+    transactions.sumByDouble { it.amount } > 250 -> true
+    else -> false
   }
 
-  private fun getReport(key: Int?, value: List<Transaction>, namedAddresses: List<NamedAddress>): Report {
+  private fun getReport(value: List<Transaction>, namedAddresses: List<NamedAddress>): Report {
     val transactionsByDate = value.groupBy { it.date }
     val transactionSums = transactionsByDate.keys.sorted()
       .map { Transaction(date = it, amount = transactionsByDate[it]!!.sumByDouble(Transaction::amount)) }
@@ -91,6 +83,7 @@ class GenerateReports : Runnable {
         put("address", namedAddress.address.replace("\n", "\\\\\n"))
         put("transactions", transactions)
         put("total", transactions.sumByDouble { it.amount })
+        put("dateFormat", DateTimeFormatter.ofPattern("MM/dd/yyyy"))
       }, this)
   }.toString()
 }
