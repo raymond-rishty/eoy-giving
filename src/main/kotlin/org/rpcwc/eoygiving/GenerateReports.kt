@@ -1,3 +1,5 @@
+package org.rpcwc.eoygiving
+
 import com.github.rvesse.airline.annotations.Command
 import com.google.common.io.Files
 import com.google.common.io.Resources

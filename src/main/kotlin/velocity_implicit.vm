@@ -1,5 +1,5 @@
 #* @implicitly included *#
-#* @vtlvariable name="transactions" type="Transaction[]" *#
+#* @vtlvariable name="transactions" type="org.rpcwc.eoygiving.Transaction[]" *#
 #* @vtlvariable name="name" type="java.lang.String" *#
 #* @vtlvariable name="address" type="java.lang.String" *#
 #* @vtlvariable name="total" type="double" *#

@@ -1,4 +1,4 @@
-
+package org.rpcwc.eoygiving
 import com.github.rvesse.airline.annotations.Command
 import javax.inject.Inject
 
